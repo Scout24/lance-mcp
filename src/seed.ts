@@ -18,6 +18,7 @@ import { BaseLanguageModelInterface, BaseLanguageModelCallOptions } from "@langc
 import { PromptTemplate } from "@langchain/core/prompts";
 import * as crypto from 'crypto';
 import * as defaults from './config'
+import { TextLoader } from "langchain/document_loaders/fs/text";
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2),{boolean: "overwrite"});
 
@@ -70,6 +71,7 @@ const directoryLoader = new DirectoryLoader(
   filesDir,
   {
    ".pdf": (path: string) => new PDFLoader(path),
+   ".md": (path: string) => new TextLoader(path),
   },
 );
 
