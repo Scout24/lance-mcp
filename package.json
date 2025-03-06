@@ -18,7 +18,8 @@
     "build": "tsc && shx chmod +x dist/*.js",
     "prepare": "npm run build",
     "watch": "tsc --watch",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/seed.ts",
+    "crawl": "tsx src/crawl.ts"
   },
   "keywords": [
     "mcp",
@@ -33,6 +34,8 @@
     "@langchain/community": "^0.3.24",
     "@langchain/ollama": "^0.1.4",
     "@modelcontextprotocol/sdk": "1.1.1",
+    "axios": "^1.8.1",
+    "cheerio": "^1.0.0",
     "minimist": "^1.2.8",
     "pdf-parse": "^1.1.1"
   },
@@ -41,7 +44,7 @@
     "shx": "^0.3.4",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
-  },  
+  },
   "overrides": {
     "@langchain/community": {
       "@lancedb/lancedb": "^0.15.0"
