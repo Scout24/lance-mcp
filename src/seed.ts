@@ -177,9 +177,15 @@ rl.question('Please enter your Confluence API token: ', (confluenceApiToken) => 
         if (overwrite) {
             try {
                 await db.dropTable(defaults.CATALOG_TABLE_NAME);
+            } catch (e) {
+                console.log("Error dropping catalog table. Maybe they don't exist!");
+            }
+        }
+        if (overwrite) {
+            try {
                 await db.dropTable(defaults.CHUNKS_TABLE_NAME);
             } catch (e) {
-                console.log("Error dropping tables. Maybe they don't exist!");
+                console.log("Error dropping chunks table. Maybe they don't exist!");
             }
         }
 
@@ -195,7 +201,10 @@ rl.question('Please enter your Confluence API token: ', (confluenceApiToken) => 
         const rawDocs : Document[] = [...fileDocs, ...confluenceDocs];
         // overwrite the metadata as large metadata can give lancedb problems
         for (const doc of rawDocs) {
-            doc.metadata = {loc: doc.metadata.loc, source: doc.metadata.source ??= doc.metadata.url , version: doc.metadata.version};
+            doc.metadata = {
+                loc: doc.metadata.loc,
+                source: doc.metadata.source ??= doc.metadata.url ,
+                ... doc.metadata.version? {version: doc.metadata.version}:{}};
         }
 
         console.log("Loading LanceDB catalog store...")
@@ -232,18 +241,33 @@ rl.question('Please enter your Confluence API token: ', (confluenceApiToken) => 
 
         console.log("updating / creating LanceDB vector store...")
 
-        const vectorStore = docs.length > 0 ?
-            await LanceDB.fromDocuments(docs,
-                new OllamaEmbeddings({model: defaults.EMBEDDING_MODEL}),
+        var vectorStore : LanceDB;
+        if ( docs.length > 0 ) {
+            const chunkSize = 500;
+            const chunk = docs.slice(0, chunkSize);
+            vectorStore = await LanceDB.fromDocuments(
+                chunk,
+                new OllamaEmbeddings({ model: defaults.EMBEDDING_MODEL }),
                 {
-                    mode: overwrite ? "overwrite" : undefined,
+                    mode: "create",
                     uri: databaseDir,
                     tableName: defaults.CHUNKS_TABLE_NAME
-                } as LanceDBArgs) :
+                } as LanceDBArgs
+            );
+            console.log(`Processed chunk ${1} of ${Math.ceil(docs.length / chunkSize)}`);
+
+            for (let i = chunkSize; i < docs.length; i += chunkSize) {
+                const chunk = docs.slice(i, i + chunkSize);
+                await vectorStore.addDocuments(chunk);
+                console.log(`Processed chunk ${i / chunkSize + 1} of ${Math.ceil(docs.length / chunkSize)}`);
+            }
+
+        } else {
             new LanceDB(new OllamaEmbeddings({model: defaults.EMBEDDING_MODEL}), {
                 uri: databaseDir,
                 table: chunksTable
             });
+        }
 
         console.log("Number of new chunks: ", docs.length);
         console.log(vectorStore);
