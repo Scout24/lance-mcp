@@ -1,20 +1,14 @@
 import * as lancedb from "@lancedb/lancedb";
 import minimist from 'minimist';
-import {
-  RecursiveCharacterTextSplitter
-} from 'langchain/text_splitter';
-import {
-  DirectoryLoader
-} from 'langchain/document_loaders/fs/directory';
-import {
-  LanceDB, LanceDBArgs
-} from "@langchain/community/vectorstores/lancedb";
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { DirectoryLoader } from 'langchain/document_loaders/fs/directory';
+import { LanceDB, LanceDBArgs } from "@langchain/community/vectorstores/lancedb";
 import { Document } from "@langchain/core/documents";
 import { Ollama, OllamaEmbeddings } from "@langchain/ollama";
 import * as fs from 'fs';
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { loadSummarizationChain } from "langchain/chains";
-import { BaseLanguageModelInterface, BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import { BaseLanguageModelCallOptions, BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { PromptTemplate } from "@langchain/core/prompts";
 import * as crypto from 'crypto';
 import * as defaults from './config'
@@ -66,11 +60,9 @@ const contentOverviewPrompt = new PromptTemplate({
 async function generateContentOverview(rawDocs: any, model: BaseLanguageModelInterface<any, BaseLanguageModelCallOptions>) {
   // This convenience function creates a document chain prompted to summarize a set of documents.
   const chain = loadSummarizationChain(model, { type: "map_reduce", combinePrompt: contentOverviewPrompt});
-  const res = await chain.invoke({
-    input_documents: rawDocs,
+    return await chain.invoke({
+      input_documents: rawDocs,
   });
-
-  return res;
 }
 
 async function catalogRecordExists(catalogTable: lancedb.Table, hash: string): Promise<boolean> {
