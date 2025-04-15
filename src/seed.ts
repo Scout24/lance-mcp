@@ -30,7 +30,7 @@ const overwrite = argv["overwrite"];
 const confluenceBaseUrl = "https://gs24.atlassian.net/wiki";
 
 
-    function validateArgs() {
+function validateArgs() {
     if (!databaseDir || !filesDir) {
         console.error("Please provide a database path (--dbpath) and a directory with files (--filesdir) to process");
         process.exit(1);
